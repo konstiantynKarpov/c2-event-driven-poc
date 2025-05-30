@@ -1,0 +1,140 @@
+# c2-event-driven-poc/docker-compose.yml
+# Removed top-level 'version: 3.8' as it's obsolete
+
+services:
+  # Zookeeper for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+
+  # Kafka Broker
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+  # Kafka UI for monitoring
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+
+  # Simplified Blue Force Tracker Service
+  blue-force-tracker:
+    build: ./services/blue-force-tracker
+    container_name: blue-force-tracker
+    ports:
+      - "8001:8000"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    volumes:
+      - ./services/blue-force-tracker:/app
+
+  # Proximity Processor Service
+  proximity-processor:
+    build: ./processing_services
+    container_name: proximity-processor
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Define other ENV VARS for proximity_processor's main.py here if needed:
+      # BLUE_POSITIONS_TOPIC: blue-force-events
+      # ENEMY_UPDATES_TOPIC: enemy-events
+      # PROXIMITY_ALERTS_TOPIC: proximity-alerts
+      # CONSUMER_GROUP_ID: proximity-processor-group
+    volumes:
+      - ./processing_services:/app # Changed: Mounts the entire processing_services dir to /app
+
+  # Simplified Enemy Marking Service
+  enemy-marking:
+    build: ./services/enemy-marking
+    container_name: enemy-marking
+    ports:
+      - "8002:8000"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_ENEMY_EVENTS_TOPIC: enemy-events
+    volumes:
+      - ./services/enemy-marking:/app
+
+  # Simplified Notification Service
+  notification-service:
+    build: ./services/notification_service
+    container_name: notification-service
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      PROXIMITY_ALERTS_TOPIC: proximity-alerts
+      ENEMY_EVENTS_TOPIC: enemy-events
+      NOTIFICATION_CONSUMER_GROUP_ID: notification-service-group
+    # volumes:
+    #   - ./services/notification_service:/app
+
+  # Simplified Order Service
+  order-service:
+    build: ./services/order-service
+    container_name: order-service
+    ports:
+      - "8003:8000"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_ORDER_EVENTS_TOPIC: order-events
+    volumes:
+      - ./services/order-service:/app
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+# Define named volumes for persistent data
+volumes:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+  redis-data:

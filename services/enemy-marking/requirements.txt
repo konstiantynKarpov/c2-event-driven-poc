@@ -1,0 +1,5 @@
+# services/enemy-marking/requirements.txt
+fastapi
+uvicorn[standard]
+pydantic
+kafka-python
