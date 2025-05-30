@@ -32,37 +32,7 @@ The system comprises microservices communicating asynchronously via Apache Kafka
 * **Docker Desktop:** Latest stable version.
 * A terminal or command prompt.
 
-## 4. Project Structure
-
-
-c2-event-driven-poc/
-├── docker-compose.yml        # Defines all services and their orchestration
-├── kafka-setup/
-│   └── create-topics.sh    # Script to create necessary Kafka topics
-├── services/                 # Contains API-driven microservices
-│   ├── blue-force-tracker/
-│   │   ├── Dockerfile
-│   │   ├── main.py
-│   │   └── requirements.txt
-│   ├── enemy-marking/
-│   │   ├── Dockerfile
-│   │   ├── main.py
-│   │   └── requirements.txt
-│   ├── notification_service/
-│   │   ├── Dockerfile
-│   │   ├── main.py
-│   │   └── requirements.txt
-│   └── order_service/
-│       ├── Dockerfile
-│       ├── main.py
-│       └── requirements.txt
-└── processing_services/      # Contains backend processing services
-├── Dockerfile            # Dockerfile for the proximity-processor
-├── main.py               # (This is the proximity_processor.py code)
-└── requirements.txt      # Requirements for the proximity-processor
-
-
-## 5. Getting Started
+## 4. Getting Started
 
 From the project root (`c2-event-driven-poc/`):
 
@@ -95,7 +65,7 @@ From the project root (`c2-event-driven-poc/`):
         ```
     Creates `blue-force-events`, `enemy-events`, `order-events`, `proximity-alerts` and lists topics for verification.
 
-## 6. Services & Testing
+## 5. Services & Testing
 
 Interact with APIs using `curl`/Postman. Monitor via Kafka UI and Docker logs.
 
@@ -146,7 +116,7 @@ Interact with APIs using `curl`/Postman. Monitor via Kafka UI and Docker logs.
     * Logs simulated notifications.
     * Logs: `docker-compose logs -f notification-service`
 
-## 7. Monitoring the System
+## 6. Monitoring the System
 
 * **Kafka UI (`http://localhost:8080`):** Primary tool for message/topic monitoring.
 * **Docker Logs:** Essential for service debugging and observation.
@@ -159,7 +129,7 @@ Interact with APIs using `curl`/Postman. Monitor via Kafka UI and Docker logs.
     # docker-compose logs -f proximity-processor
     ```
 
-## 8. Stopping the System
+## 7. Stopping the System
 
 * To stop and remove all containers, networks, and non-named volumes:
     ```bash
@@ -170,7 +140,7 @@ Interact with APIs using `curl`/Postman. Monitor via Kafka UI and Docker logs.
     docker-compose stop
     ```
 
-## 9. Key Event Flow Example
+## 8. Key Event Flow Example
 
 1.  Post position for `B001` (Blue Force Tracker).
 2.  Post enemy marking for `E001` near `B001` (Enemy Marking Service).
