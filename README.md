@@ -1,4 +1,4 @@
-# C2 Event-Driven Proof-of-Concept (Simplified Uni Project Version)
+# C2 Event-Driven Proof-of-Concept 
 
 ## 1. Overview
 
